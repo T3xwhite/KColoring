@@ -1,4 +1,7 @@
 import math
+import itertools
+import copy
+import random
 import click
 import pygame
 
@@ -8,6 +11,7 @@ WIN_HEIGHT = 600
 VERTEX_RAD = 10
 VERTEX_COLOR = (100, 100, 100)
 MAX_VERTICES = 20
+FONT_SIZE = 15
 
 
 class Graph():
@@ -16,13 +20,15 @@ class Graph():
     def __init__(self, k):
         """Graph Initialization."""
         self.k_coloring = int(k)
+        self.coloring = [VERTEX_COLOR for i in range(MAX_VERTICES)]
         self.vertex_locs = []
-        self.adj_matrix = [[0 for i in range(MAX_VERTICES)] for i in range(MAX_VERTICES)]
+        self.adj_matrix = [[0 for i in range(MAX_VERTICES)]
+                           for i in range(MAX_VERTICES)]
 
     def draw(self, surface):
         """Draw Vertices and Edges for Graph."""
-        for loc in self.vertex_locs:
-            pygame.draw.circle(surface, VERTEX_COLOR, loc, VERTEX_RAD)
+        for i, loc in enumerate(self.vertex_locs):
+            pygame.draw.circle(surface, self.coloring[i], loc, VERTEX_RAD)
         for i in range(MAX_VERTICES):
             for j in range(MAX_VERTICES - i):
                 if self.adj_matrix[i][j] == 1:
@@ -52,10 +58,10 @@ class Graph():
     def is_colorable(self):
         """Return bool of whether the graph is k-colorable."""
         # Brute force algorithm for checking if graph is k-colorable
-        # Runtime O(k * num_vertices * MAX_VERTICES^2)
+        # Runtime O(k ** num_vertices * MAX_VERTICES^2)
         k = self.k_coloring
         num_vertices = len(self.vertex_locs)
-        for i in range(k * num_vertices):
+        for i in range(k ** num_vertices):
             valid_coloring = True
             coloring = []
             for j in range(num_vertices):
@@ -66,7 +72,36 @@ class Graph():
                             and coloring[x] == coloring[y]):
                         valid_coloring = False
             if valid_coloring:
-                print(coloring)
+                colors = []
+                for z in range(MAX_VERTICES):
+                    c_1 = random.randint(0, 255)
+                    c_2 = random.randint(0, 255)
+                    c_3 = random.randint(0, 255)
+                    colors.append((c_1, c_2, c_3))
+                for z in range(num_vertices):
+                    self.coloring[z] = colors[coloring[z]]
+                print("Coloring: ", coloring)
+                return True
+        return False
+
+    def compute_iso(self, G):
+        """Return whether this Graph is isomorphic to G."""
+        # Brute force algorithm
+        # Runtime O(num_vertices! * num_vertices * MAX_VERTICES^2)
+        num_vertices = len(self.vertex_locs)
+        if num_vertices != len(G.vertex_locs):
+            return False
+        all_perms = list(itertools.permutations(range(num_vertices)))
+        for permutation in all_perms:
+            valid_iso = True
+            new_adj_matrix = copy.deepcopy(G.adj_matrix)
+            for i in range(num_vertices):
+                for x, y in enumerate(permutation):
+                    new_adj_matrix[i][x] = G.adj_matrix[i][y]
+            for x, y in enumerate(permutation):
+                if self.adj_matrix[x] != new_adj_matrix[y]:
+                    valid_iso = False
+            if valid_iso:
                 return True
         return False
 
@@ -79,7 +114,8 @@ class Board():
         self.graphs = []
         self.mode = 0   # mode in [0, 1]
         self.making_edge = False
-        self.v_1 = -1
+        self.v_1 = -1   # Starting vertex for edge creation
+        self.text = ''  # Text displayed at bottom left of screen
 
     def create_graph(self, k):
         """Create Graph Object on Board."""
@@ -107,8 +143,22 @@ class Board():
                 self.handle_click(pygame.mouse.get_pos())
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_k:
-                    print(self.graphs[self.mode].adj_matrix)
-                    print(self.graphs[self.mode].is_colorable())
+                    colorable = self.graphs[self.mode].is_colorable()
+                    k = self.graphs[self.mode].k_coloring
+                    if colorable:
+                        self.text = "This graph is {}-Colorable".format(k)
+                    else:
+                        self.text = "This graph is not {}-Colorable".format(k)
+                elif event.key == pygame.K_s:
+                    self.mode = 1 - self.mode
+                elif event.key == pygame.K_i:
+                    graph_1 = self.graphs[self.mode]
+                    graph_2 = self.graphs[1 - self.mode]
+                    are_iso = graph_1.compute_iso(graph_2)
+                    if are_iso:
+                        self.text = "These graphs are isomorphic"
+                    else:
+                        self.text = "These graphs are not isomorphic"
         return True
 
     def draw(self, surface):
@@ -127,14 +177,30 @@ def main(k):
     surface = pygame.Surface(win.get_size())
     surface = surface.convert()
 
+    # Screen Text Initialization
+    myfont = pygame.font.SysFont('Comic Sans MS', FONT_SIZE)
+    text1 = 'Controls'
+    text2 = 's - Switch Graphs'
+    text3 = 'k - Compute k-Coloring'
+    text4 = 'i - Compute Graph Isomorphism'
+    text = [text1, text2, text3, text4]
+    text_color = (255, 255, 255)
+    text_surface = [myfont.render(t, True, text_color) for t in text]
+
     # Initialize Screen (Board) Manager
     board = Board()
     board.create_graph(k)
+    board.create_graph(k)
 
+    # Update screen until user exits program
     while board.handle_keys():
         surface.fill((0, 0, 0))
         board.draw(surface)
         win.blit(surface, (0, 0))
+        for i, text in enumerate(text_surface):
+            win.blit(text, (0, i * FONT_SIZE))
+        board_text = myfont.render(board.text, True, text_color)
+        win.blit(board_text, (0, WIN_HEIGHT - FONT_SIZE - 10))
         pygame.display.update()
 
     pygame.quit()
