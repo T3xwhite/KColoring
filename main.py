@@ -141,6 +141,9 @@ class Board():
                 return False
             if event.type == pygame.MOUSEBUTTONUP:
                 self.handle_click(pygame.mouse.get_pos())
+                if len(self.graphs[self.mode].vertex_locs) > MAX_VERTICES:
+                    print("Maximum vertex count surpassed.")
+                    return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_k:
                     colorable = self.graphs[self.mode].is_colorable()
