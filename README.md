@@ -20,7 +20,7 @@ Once the instance is launched, the user can do the following actions:
 
 ## Algorithm Details
 
-Both k-Coloring is known to be NP-Complete and no known polynomial time algorithm exists for Graph-Isomorphism. Since exact solutions were desired for both of these problems, the algorithms used to solve these problems do not run in polynomial time. To limit these runtime issues, the program has a hardcoded maximum vertex count for the graphs, which is set by default to 20 vertices. This value can be changed by changing the `MAX_VERTICES` global variable at the top of `main.py`. 
+The [Graph Coloring](https://en.wikipedia.org/wiki/Graph_coloring) problem is known to be [NP-Complete](https://en.wikipedia.org/wiki/NP-completeness) and there is also no known polynomial time algorithm for solving [Graph-Isomorphism](https://en.wikipedia.org/wiki/Graph_isomorphism). Since exact solutions were desired for both of these problems, the algorithms implemented here do not run in polynomial time. To limit runtime issues, the program has a hardcoded maximum vertex count for the graphs, which is set by default to 20 vertices. This value can be changed by changing the `MAX_VERTICES` global variable at the top of `main.py`. 
 
 The algorithm for k-Coloring iterates through all possible colorings, check each to find a valid k-Coloring. The runtime for computing a k-Coloring on a graph G = (V, E) is
 <a href="https://www.codecogs.com/eqnedit.php?latex=\inline&space;\dpi{100}&space;O(k^{|V|}&space;\cdot&space;M^2)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\inline&space;\dpi{100}&space;O(k^{|V|}&space;\cdot&space;M^2)" title="O(k^{|V|} \cdot M^2)" /></a> where M is `MAX_VERTICES` and |V| is the number of vertices in the graph G.
